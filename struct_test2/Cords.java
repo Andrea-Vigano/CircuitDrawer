@@ -9,6 +9,11 @@ public class Cords {
         this.y = y;
     }
 
+    public Cords(int[] cords) {
+        this.x = cords[0];
+        this.y = cords[1];
+    }
+
     public void setX(int x) {
         this.x = x;
     }

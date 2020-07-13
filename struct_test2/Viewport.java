@@ -4,13 +4,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Viewport extends JPanel
         implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener{
 
     // lines storage
-    private final LinkedList<Line> lines = new LinkedList<Line>();
+    private LinkedList<Line> lines = new LinkedList<Line>();
 
     private final Color BG_COLOR = Color.WHITE;
 
@@ -37,8 +39,15 @@ public class Viewport extends JPanel
     private final int GRID_SIZE = 50;
     private final Color GRID_COLOR = Color.LIGHT_GRAY;
 
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("VP test");
+        frame.getContentPane().add(new Viewport());
+        frame.setVisible(true);
+    }
+
     public Viewport() {
         super();
+        setName("vp");
         setFocusable(true);
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -80,8 +89,8 @@ public class Viewport extends JPanel
         g2d.setStroke(new BasicStroke(this.LINE_WIDTH));
         g2d.setColor(this.LINE_COLOR);
         for (Line line : this.lines) {
-            int[] relA = this.relCords(line.getA().getX(), line.getA().getY()),
-                  relB = this.relCords(line.getB().getX(), line.getB().getY());
+            int[] relA = this.getClosestGridIntersection(this.relCords(line.getA().getX(), line.getA().getY())),
+                  relB = this.getClosestGridIntersection(this.relCords(line.getB().getX(), line.getB().getY()));
             g2d.drawLine(relA[0], relA[1], relB[0], relB[1]);
         }
     }
@@ -112,6 +121,18 @@ public class Viewport extends JPanel
             _y += gridSize;
         }
         return new int[] {_x, _y};
+    }
+    private int[] getClosestGridIntersection(int[] cords) {
+        return getClosestGridIntersection(cords[0], cords[1]);
+    }
+
+    public Object[] getDrawnObjects() {
+        return this.lines.toArray();
+    }
+
+    public void setDrawnObjects(LinkedList<Line> lines) {
+        this.lines = lines;
+        this.repaint();
     }
 
     @Override
@@ -176,6 +197,7 @@ public class Viewport extends JPanel
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
+        // TODO adjust offset after zooming
         if (e.getWheelRotation() < 0) {
             this.zoomFactor /= this.ZOOM_INCREASE;
         } else {
@@ -187,6 +209,7 @@ public class Viewport extends JPanel
 
     @Override
     public void keyTyped(KeyEvent e) {
+        System.out.println("press");
         if (e.getKeyChar() == 'l') {
             // setting line origin
             this.clearActions();
