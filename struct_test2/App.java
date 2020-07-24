@@ -34,7 +34,6 @@ public class App extends JFrame {
         // set CLOSE action
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        this.addMouseListener();
 
         this.menuBar.file.addActionListener(new ActionListener() {
             @Override

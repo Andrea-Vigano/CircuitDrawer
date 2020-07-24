@@ -1,0 +1,40 @@
+Project architecture
+
+Main
+
+Front end:
+
+    UI
+        {
+        App
+        ToolBar
+        Viewport
+        StateBar
+        SideBar
+        FileSideBar
+        SettingsSideBar
+        EditSideBar
+        }
+
+Back end:
+
+    Engine
+        {
+        ActionBindingManager
+        ViewportSpecs
+        DrawnObjects
+        }
+
+    Components
+        {
+        Drawable
+        Wire
+        Resistor
+        Transistor
+        Node
+        }
+
+Save logic:
+    Write data on .csv file
+
+    table headers: type, origin x, origin y, end x, end y, angle, rotation, resistance
