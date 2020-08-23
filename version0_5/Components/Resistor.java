@@ -20,4 +20,9 @@ public class Resistor extends Drawable {
                 Integer.toString(end[0]), Integer.toString(end[1]),
                 "N", "N", Integer.toString(resistance)};
     }
+
+    @Override
+    public SelectableArea getSelectableRect() {
+        return new SelectableArea(this);
+    }
 }

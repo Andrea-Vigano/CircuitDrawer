@@ -1,18 +1,29 @@
 package version0_5.Engine;
 
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Image;
 import version0_5.Components.Resistor;
 import version0_5.Components.Transistor;
 import version0_5.Components.Wire;
-import version0_5.UI.App;
-import version0_5.UI.FileSideBar;
-import version0_5.UI.OpenFileChooser;
-import version0_5.UI.Viewport;
+import version0_5.UI.*;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+
+import static java.lang.Math.pow;
 
 /**
  * Bind and hooks all the GUI pieces together to interact with the back end.
@@ -22,11 +33,13 @@ public class ActionBindingManager {
     public App app;
     private final Viewport viewport;
     private final ViewportSpecs vs;
+    private final ExportPanel exportPanel;
 
     public ActionBindingManager(App app) {
         this.app = app;
         viewport = app.viewport;
         vs = viewport.vs;
+        exportPanel = new ExportPanel(vs);
     }
 
     private void changeSideBar(int index) {
@@ -61,7 +74,7 @@ public class ActionBindingManager {
             vs.DO.transistors.getLast().setEnd(cgi[0] - vs.DEFAULT_GRID_SIZE, cgi[1] + vs.DEFAULT_GRID_SIZE);
         }
     }
-    private void saveAsAction(ActionEvent e) {
+    private void saveAsAction() {
         boolean exit;
         JFileChooser fileChooser = new JFileChooser();
         System.out.println("Opening save as dialog");
@@ -224,6 +237,9 @@ public class ActionBindingManager {
                     System.out.println("Action 0 selected");
                     app.stateBar.actionLabel.setText("Hovering");
                     vs.action = 0;
+                } else if (vs.action == 0) {
+                    // check if event fall in a selectable area
+                    vs.DO.selected = vs.DO.wires.getFirst();
                 }
                 viewport.repaint();
             }
@@ -232,6 +248,100 @@ public class ActionBindingManager {
             public void mousePressed(MouseEvent e) {
                 // prepare for pad
                 vs.direction = new int[] {e.getX(), e.getY()};
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+    }
+
+    /**
+     * Viewport like mouse listener to implement pad and zoom in the export preview viewport.
+     */
+    public void addExportMouseListeners() {
+        ViewportSpecs exportVs = exportPanel.preview.vs;
+        exportPanel.preview.addMouseMotionListener(new MouseMotionListener() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                ExportPreview vp = exportPanel.preview;
+                if (e.getModifiersEx() == InputEvent.BUTTON2_DOWN_MASK)
+                    exportVs.offset = new int[] {exportVs.offset[0] + e.getX() - exportVs.direction[0],
+                            exportVs.offset[1] + e.getY() - exportVs.direction[1]};
+                exportVs.CGI = exportVs.getCGI(e.getX(), e.getY());
+                // change rect sizes if snapCenter exists
+                if (vp.rectSnap != 0) {
+                    if (vp.imageWidth >= vp.MIN_IMAGE_WIDTH && vp.imageHeight >= vp.MIN_IMAGE_HEIGHT) {
+                        if (vp.rectSnap == 2 || vp.rectSnap == 3) {
+                            vp.imageWidth += e.getX() - exportVs.direction[0];
+                        } else {
+                            vp.imageWidth -= e.getX() - exportVs.direction[0];
+                        }
+                        if (vp.rectSnap <= 2) {
+                            vp.imageHeight -= e.getY() - exportVs.direction[1];
+                        } else {
+                            vp.imageHeight += e.getY() - exportVs.direction[1];
+                        }
+                    } else {
+                        vp.imageWidth = Math.max(vp.imageWidth, vp.MIN_IMAGE_WIDTH);
+                        vp.imageHeight = Math.max(vp.imageHeight, vp.MIN_IMAGE_HEIGHT);
+                    }
+                    // show image size on the text boxes
+                    exportPanel.settingsSideBar.imageWidth.setText(String.valueOf(vp.imageWidth));
+                    exportPanel.settingsSideBar.imageHeight.setText(String.valueOf(vp.imageHeight));
+                }
+                // update drag direction
+                exportVs.direction = new int[] {e.getX(), e.getY()};
+                vp.repaint();
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                exportVs.CGI = exportVs.getCGI(e.getX(), e.getY());
+                // check if mouse falls near one of the edges of the rectangle
+                int[][] rectCords = exportPanel.preview.getRectEdgesCords();
+                for (int i = 0; i < rectCords.length; i++) {
+                    if (pow(pow(e.getX() - rectCords[i][0], 2) + pow(e.getY() - rectCords[i][1], 2), 0.5) < 50) {
+                        exportPanel.preview.rectSnap = ++i;
+                        break;
+                    } else {
+                        exportPanel.preview.rectSnap = 0;
+                    }
+                }
+                exportPanel.repaint();
+            }
+        });
+        exportPanel.preview.addMouseWheelListener(e -> {
+            if (e.getWheelRotation() < 0) {
+                exportVs.zoomFactor /= exportVs.ZOOM_INCREASE;
+            } else {
+                exportVs.zoomFactor *= exportVs.ZOOM_INCREASE;
+            }
+            exportVs.gridSize = (int) (exportVs.DEFAULT_GRID_SIZE / exportVs.zoomFactor);
+            exportVs.CGI = exportVs.getCGI(e.getX(), e.getY());
+            exportPanel.preview.repaint();
+        });
+        exportPanel.preview.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // prepare for pad
+                exportVs.direction = new int[] {e.getX(), e.getY()};
             }
 
             @Override
@@ -406,7 +516,7 @@ public class ActionBindingManager {
         action = new AbstractAction(((FileSideBar) (app.sideBar.sideBars[0])).saveAs.getText()) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                saveAsAction(e);
+                saveAsAction();
             }
         };
         ((FileSideBar) (app.sideBar.sideBars[0])).saveAs.setAction(action);
@@ -422,7 +532,7 @@ public class ActionBindingManager {
                     SaveFile.save(vs.DO);
                 } catch (NullPointerException exc) {
                     // name and path not defined
-                    saveAsAction(e);
+                    saveAsAction();
                 }
             }
         };
@@ -456,5 +566,152 @@ public class ActionBindingManager {
                 KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK),
                 ((FileSideBar) (app.sideBar.sideBars[0])).open.getText());
         ((FileSideBar) (app.sideBar.sideBars[0])).open.getActionMap().put(((FileSideBar) (app.sideBar.sideBars[0])).open.getText(), action);
+        // export button: action = open Export frame, hotkey = none
+        action = new AbstractAction(((FileSideBar) (app.sideBar.sideBars[0])).export.getText()) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame win = new JFrame("Export");
+                win.setBounds(3433 + 200, 320 + 30, 1080, 620);
+                win.getContentPane().add(exportPanel);
+                exportPanel.settingsSideBar.imageWidth.setText(String.valueOf(exportPanel.preview.imageWidth));
+                exportPanel.settingsSideBar.imageHeight.setText(String.valueOf(exportPanel.preview.imageHeight));
+                win.setVisible(true);
+                Color selectedColor = ((JLabel) exportPanel.settingsSideBar.color.getRenderer()).getBackground();
+                exportPanel.preview.vs.WIRE_COLOR = selectedColor;
+                exportPanel.preview.vs.RESISTOR_COLOR = selectedColor;
+                exportPanel.preview.vs.TRANSISTOR_COLOR = selectedColor;
+                exportPanel.preview.repaint();
+            }
+        };
+        ((FileSideBar) (app.sideBar.sideBars[0])).export.setAction(action);
+    }
+
+    /**
+     * Bind the buttons in the export panel to their respective actions in the settings of the preview panel.
+     */
+    public void bindExportPanelButtons() {
+        ExportPreview pv = exportPanel.preview;
+        // Color chooser: when the selection changes, change viewport specs data and repaint preview
+        exportPanel.settingsSideBar.color.addActionListener(e -> {
+            Color selectedColor = ((JLabel) exportPanel.settingsSideBar.color.getRenderer()).getBackground();
+            pv.vs.WIRE_COLOR = selectedColor;
+            pv.vs.RESISTOR_COLOR = selectedColor;
+            pv.vs.TRANSISTOR_COLOR = selectedColor;
+            pv.repaint();
+        });
+        // Width chooser: change viewport items widths
+        exportPanel.settingsSideBar.width.addActionListener(e -> {
+            String selectedWidth = ((String) exportPanel.settingsSideBar.width.getSelectedItem());
+            assert selectedWidth != null;
+            int width = switch (selectedWidth) {
+                case "Medium" -> 2;
+                case "Large" -> 3;
+                default -> 1;
+            };
+            pv.vs.WIRE_WIDTH = width;
+            pv.vs.RESISTOR_WIDTH = width;
+            pv.vs.TRANSISTOR_WIDTH = width;
+            pv.repaint();
+        });
+        // Image size text boxes: change rectangle dimensions
+        exportPanel.settingsSideBar.imageWidth.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                String text = exportPanel.settingsSideBar.imageWidth.getText();
+                try {
+                    pv.imageWidth = Integer.parseInt(text);
+                } catch (NumberFormatException ignored) {}
+                pv.repaint();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
+            }
+        });
+        exportPanel.settingsSideBar.imageHeight.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                String text = exportPanel.settingsSideBar.imageHeight.getText();
+                try {
+                    pv.imageHeight = Integer.parseInt(text);
+                } catch (NumberFormatException ignored) {}
+                pv.repaint();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
+            }
+        });
+        // Export buttons
+        // Export as JPG
+        exportPanel.settingsSideBar.exportAsJPG.addActionListener(e -> {
+            BufferedImage image = new BufferedImage(pv.getWidth(), pv.getHeight(),
+                    BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = image.createGraphics();
+            pv.printAll(g);
+            g.dispose();
+            BufferedImage cropped = image.getSubimage((pv.getWidth() - pv.imageWidth) / 2 + 1,
+                    (pv.getHeight() - pv.imageHeight) / 2 + 1,
+                    exportPanel.preview.imageWidth - 1, exportPanel.preview.imageHeight - 1);
+            try {
+                ImageIO.write(cropped, "jpg", new File("image.jpg"));
+                System.out.println("Exporting file as jpg image");
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
+        // Export as PNG
+        exportPanel.settingsSideBar.exportAsPNG.addActionListener(e -> {
+            BufferedImage image = new BufferedImage(pv.getWidth(), pv.getHeight(),
+                    BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = image.createGraphics();
+            pv.printAll(g);
+            g.dispose();
+            BufferedImage cropped = image.getSubimage((pv.getWidth() - pv.imageWidth) / 2 + 1,
+                    (pv.getHeight() - pv.imageHeight) / 2 + 1,
+                    exportPanel.preview.imageWidth - 1, exportPanel.preview.imageHeight - 1);
+            try {
+                ImageIO.write(cropped, "png", new File("image.png"));
+                System.out.println("Exporting file as png image");
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
+        // Export as DWG
+        // Export as PDF
+        exportPanel.settingsSideBar.exportAsPDF.addActionListener(e -> {
+            Document document;
+            BufferedImage image = new BufferedImage(pv.getWidth(), pv.getHeight(),
+                    BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = image.createGraphics();
+            pv.printAll(g);
+            g.dispose();
+            BufferedImage cropped = image.getSubimage((pv.getWidth() - pv.imageWidth) / 2 + 1,
+                    (pv.getHeight() - pv.imageHeight) / 2 + 1,
+                    exportPanel.preview.imageWidth - 1, exportPanel.preview.imageHeight - 1);
+            try {
+                ImageIO.write(cropped, "png", new File("image.png"));
+                Image _image = new Image(ImageDataFactory.create(cropped, Color.GRAY));
+                PdfWriter writer = new PdfWriter("image.pdf");
+                document = new Document(new PdfDocument(writer));
+                document.add(_image);
+                document.close();
+                Files.delete(Paths.get("image.png"));
+            } catch (IOException fileNotFoundException) {
+                fileNotFoundException.printStackTrace();
+            }
+        });
     }
 }

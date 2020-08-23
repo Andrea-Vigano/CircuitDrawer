@@ -14,6 +14,7 @@ public class FileSideBar extends JPanel {
     public JButton open = new JButton("Open");
     public JButton save = new JButton("Save");
     public JButton saveAs = new JButton("Save as...");
+    public JButton export = new JButton("Export");
 
     public FileSideBar() {
         super();
@@ -28,14 +29,14 @@ public class FileSideBar extends JPanel {
         g.fill = GridBagConstraints.HORIZONTAL;
         g.gridy = 0;
         g.gridx = 0;
-        g.insets = new Insets(0, 0, 20, 0);
+        g.insets = new Insets(0, 0, 0, 0);
         newCircuit.setMargin(new Insets(3, 50, 3, 50));
         containerPane.add(newCircuit, g);
         g.weightx = 0.5;
         g.fill = GridBagConstraints.HORIZONTAL;
         g.gridy = 2;
         g.gridx = 0;
-        g.insets = new Insets(0, 0, 0, 0);
+        g.insets = new Insets(0, 0, 20, 0);
         open.setMargin(new Insets(3, 50, 3, 50));
         containerPane.add(open, g);
 
@@ -54,7 +55,15 @@ public class FileSideBar extends JPanel {
         saveAs.setMargin(new Insets(3, 50, 3, 50));
         containerPane.add(saveAs, g);
 
+        g.weightx = 0.5;
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.gridy = 7;
+        g.gridx = 0;
+        g.insets = new Insets(0, 0, 20, 0);
+        export.setMargin(new Insets(3, 50, 3, 50));
+        containerPane.add(export, g);
 
         add(containerPane, BorderLayout.NORTH);
     }
+
 }

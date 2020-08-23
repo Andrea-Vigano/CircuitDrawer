@@ -38,3 +38,31 @@ Save logic:
     Write data on .csv file
 
     table headers: type, origin x, origin y, end x, end y, angle, rotation, resistance
+
+Export:
+    Draw picture on JPanel, implement settings into "Export" window to tweak the stroke and color of each component
+    drawn.
+
+    Settings panel:
+        Color,
+        Width,
+        Line style,
+        Show grid lines checkbox,
+        Show labels checkbox,
+        Advanced (settings for each component type and grid specs settings).
+
+        Image sizes (also resizable and movable from the preview panel).
+
+        Export as jpg,
+        Export as png,
+        Export as dvg,
+        Export as pdf.
+
+    Preview panel:
+        Plot viewport specs drawn objects applying modifiers imposed by the setting from the settings panel
+
+        Draw rectangle with the sizes of the image size data,
+        Make the vertexes of the rect clickable and enable rect resizing with mouse dragging also (zooming).
+        Make the panel pad when the mouse wheel is dragged like it is in the viewport to modify the data shown in the
+        rect of the image.
+        Make the parts outside the rectangle a darker color.

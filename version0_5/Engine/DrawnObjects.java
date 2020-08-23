@@ -14,6 +14,8 @@ public class DrawnObjects {
     public final LinkedList<Transistor> transistors = new LinkedList<>();
     public final LinkedList<Drawable> removed = new LinkedList<>();
 
+    public Drawable selected;
+
     /**
      * Add a new drawn object to the lists
      * @param object drawn object
@@ -66,5 +68,38 @@ public class DrawnObjects {
             transistors.addLast((Transistor) last);
         }
         removed.removeLast();
+    }
+
+    /**
+     * Change selection
+     */
+    public void changeSelection(Drawable drawable) {
+        Drawable oldSelection = selected;
+        if (drawable instanceof Wire) {
+            for (Wire wire : wires) {
+                if (drawable == wire) {
+                    selected = wire;
+                    break;
+                }
+            }
+        } else if (drawable instanceof Resistor) {
+            for (Resistor resistor : resistors) {
+                if (drawable == resistor) {
+                    selected = resistor;
+                    break;
+                }
+            }
+        } else if (drawable instanceof Transistor) {
+            for (Transistor transistor : transistors) {
+                if (drawable == transistor) {
+                    selected = transistor;
+                    break;
+                }
+            }
+        }
+        if (selected == oldSelection) {
+            // not found
+            new Exception("Selected item not found").printStackTrace();
+        }
     }
 }

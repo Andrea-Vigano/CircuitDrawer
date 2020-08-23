@@ -6,6 +6,8 @@ public class Wire extends Drawable {
     public int angle = 0;
     public static int type = 0;
 
+    public static int SELECTABLE_AREA_WIDTH = 20;
+
     public Wire(int[] origin) {
         super(origin);
     }
@@ -19,5 +21,10 @@ public class Wire extends Drawable {
                 Integer.toString(origin[0]), Integer.toString(origin[1]),
                 Integer.toString(end[0]), Integer.toString(end[1]),
                 Integer.toString(angle), "N", "N"};
+    }
+
+    @Override
+    public SelectableArea getSelectableRect() {
+        return new SelectableArea(this);
     }
 }

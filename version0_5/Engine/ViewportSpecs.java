@@ -89,4 +89,9 @@ public class ViewportSpecs {
     public int[] getAbsCords(int[] cords) {
         return getAbsCords(cords[0], cords[1]);
     }
+
+    // clear current vs data and load external DO
+    public void loadExternalDO(DrawnObjects DO) {
+        this.DO = DO;
+    }
 }

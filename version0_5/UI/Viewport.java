@@ -18,10 +18,14 @@ public class Viewport extends JPanel {
 
     // data storage for viewport
     public ViewportSpecs vs = new ViewportSpecs();
+    private boolean drawSnappingCircle = true;
 
     public Viewport() {
         super();
-
+    }
+    public Viewport(ViewportSpecs vs) {
+        super();
+        this.vs = vs;
     }
 
     @Override
@@ -59,6 +63,22 @@ public class Viewport extends JPanel {
                     break;
                 default:
                     break;
+            }
+
+            g.setColor(Color.RED);
+            for (int[][] vert : wire.getSelectableRect().vertices) {
+                int[][] vertices = new int[vert.length][2];
+                int i;
+                for (i = 0; i < vert.length; i++) {
+                    vertices[i] = vs.getRelCords(vert[i]);
+                }
+                int len = vertices.length;
+                for (i = 1; i < len; i++) {
+                    g.drawLine(vertices[i][0], vertices[i][1], vertices[i - 1][0], vertices[i - 1][1]);
+                    if (i == len - 1) {
+                        g.drawLine(vertices[i][0], vertices[i][1], vertices[0][0], vertices[0][1]);
+                    }
+                }
             }
         }
 
@@ -160,9 +180,43 @@ public class Viewport extends JPanel {
             }
         }
 
+        // Special format for the selected item
+        g2d.setColor(vs.WIRE_COLOR);
+        g2d.setStroke(new BasicStroke(vs.WIRE_WIDTH * 2));
+        if (vs.DO.selected instanceof Wire) {
+            Wire wire = (Wire) vs.DO.selected;
+            int[] wireOrigin = vs.getCGI(vs.getRelCords(wire.origin));
+            int[] wireEnd = vs.getCGI(vs.getRelCords(wire.end));
+            switch (wire.angle) {
+                case 0:
+                    g2d.drawLine(wireOrigin[0], wireOrigin[1], wireEnd[0], wireEnd[1]);
+                    break;
+                case 1:
+                    g2d.drawLine(wireOrigin[0], wireOrigin[1], wireOrigin[0], wireEnd[1]);
+                    g2d.drawLine(wireOrigin[0], wireEnd[1], wireEnd[0], wireEnd[1]);
+                    break;
+                case 2:
+                    g2d.drawLine(wireOrigin[0], wireOrigin[1], wireEnd[0], wireOrigin[1]);
+                    g2d.drawLine(wireEnd[0], wireOrigin[1], wireEnd[0], wireEnd[1]);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         // draw snapping circle in CGI
-        g.setColor(vs.SNAPPING_CIRCLE_COLOR);
-        g.fillOval(vs.CGI[0] - vs.SNAPPING_CIRCLE_RADIUS / 2, vs.CGI[1] - vs.SNAPPING_CIRCLE_RADIUS / 2,
-                vs.SNAPPING_CIRCLE_RADIUS, vs.SNAPPING_CIRCLE_RADIUS);
+        if (drawSnappingCircle) {
+            g.setColor(vs.SNAPPING_CIRCLE_COLOR);
+            g.fillOval(vs.CGI[0] - vs.SNAPPING_CIRCLE_RADIUS / 2, vs.CGI[1] - vs.SNAPPING_CIRCLE_RADIUS / 2,
+                    vs.SNAPPING_CIRCLE_RADIUS, vs.SNAPPING_CIRCLE_RADIUS);
+        }
+    }
+
+    public boolean isDrawSnappingCircle() {
+        return drawSnappingCircle;
+    }
+
+    public void setDrawSnappingCircle(boolean drawSnappingCircle) {
+        this.drawSnappingCircle = drawSnappingCircle;
     }
 }

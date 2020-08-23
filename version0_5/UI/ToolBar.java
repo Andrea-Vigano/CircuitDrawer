@@ -8,7 +8,7 @@ public class ToolBar extends JToolBar {
     JPanel addPanel = new JPanel(),
             modifyPanel = new JPanel();
 
-    public JButton addWire = new JButton("Wire"),
+    public JButton addWire = new JButton("Wire", new ImageIcon("wire.png")),
             addNode = new JButton("Node", new ImageIcon("anchor-point.png")),
             addResistor = new JButton("Resistor", new ImageIcon("resistor.png")),
             addTransistor = new JButton("Transistor", new ImageIcon("transistor.png")),
@@ -17,9 +17,17 @@ public class ToolBar extends JToolBar {
             redoButton = new JButton("Redo", new ImageIcon("redo.png")),
             modifyButton = new JButton("Modify");
 
+    // Additional add options (only shown when the "Add" button is pressed)
+    public JButton addCCG = new JButton("Generator"),
+            addCapacitor = new JButton(" Capacitor"),
+            addInductor = new JButton("Inductor"),
+            addVoltmeter = new JButton("Voltmeter"),
+            addAmperometer = new JButton("Amperometer"),
+            addLamp = new JButton("Lamp");
+
     // Additional Buttons (only shown when some actions are being performed)
     public JButton changeWireAngle = new JButton("Orthogonal"),
-            rotateTransistor = new JButton("Rotate", new ImageIcon("refresh.png"));
+            rotateTransistor = new JButton("Rotate");
 
     public ToolBar() {
         super();

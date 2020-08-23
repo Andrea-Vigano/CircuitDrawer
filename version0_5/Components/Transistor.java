@@ -24,4 +24,9 @@ public class Transistor extends Drawable {
                 Integer.toString(end[0]), Integer.toString(end[1]),
                 "N", Integer.toString(rotation), "N"};
     }
+
+    @Override
+    public SelectableArea getSelectableRect() {
+        return new SelectableArea(this);
+    }
 }

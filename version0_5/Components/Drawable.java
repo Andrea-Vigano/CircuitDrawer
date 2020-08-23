@@ -9,8 +9,6 @@ public abstract class Drawable {
     public int[] origin;
     public int[] end;
 
-    public static int type;
-
     public Drawable(int[] origin) {
         this.origin = origin;
     }
@@ -26,4 +24,5 @@ public abstract class Drawable {
     }
 
     public abstract String[] convertToDataLine();
+    public abstract SelectableArea getSelectableRect();
 }

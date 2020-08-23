@@ -3,6 +3,7 @@ package version0_5.Engine;
 import version0_5.Components.Resistor;
 import version0_5.Components.Transistor;
 import version0_5.Components.Wire;
+import version0_5.Main;
 
 import java.io.*;
 import java.util.LinkedList;
@@ -34,6 +35,8 @@ public class OpenFile {
             SaveFile.path = path;
             String[] temp = path.split("/");
             SaveFile.name = temp[temp.length - 1];
+            // Show file name in frame title
+            Main.changeFrameTitle( "Circuit drawer  -  " + SaveFile.name);
             // Set as a recently opened file
             OpenFile.storeOpenedFileAsRecentlyOpened(path);
             // Load the file data in the editor
@@ -88,7 +91,6 @@ public class OpenFile {
             BufferedReader br = new BufferedReader(new FileReader(OpenFile.RECENTLY_OPENED_STORAGE_NAME));
             while ((line = br.readLine()) != null) {
                 lines.addLast(line);
-                System.out.println(line);
             }
             lines.addFirst(path);
             try (PrintWriter pw = new PrintWriter(new File(OpenFile.RECENTLY_OPENED_STORAGE_NAME))) {
